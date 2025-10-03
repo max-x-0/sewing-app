@@ -1,0 +1,20 @@
+services:
+  - type: pserv
+    name: sewing-db-service
+    plan: free
+    region: oregon
+
+  - type: web
+    name: sewing-app-lab8
+    env: docker
+    repo: https://github.com/max-x-0/sewing-app
+    region: oregon
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /index.php
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: sewing-db-service
+          property: connectionString

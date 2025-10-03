@@ -1,4 +1,4 @@
-name: CI
+name: CI (Build & Test)
 
 on:
   push:
@@ -7,17 +7,20 @@ on:
     branches: ["main"]
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Завантаження коду
+      - name: 1. Завантаження коду
         uses: actions/checkout@v3
 
-      - name: Встановлення PHP
+      - name: 2. Встановлення PHP (8.1)
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.1"
 
-      - name: Перевірка PHP синтаксису
-        run: php -l index.php
+      - name: 3. Встановлення Composer залежностей
+        run: composer install --prefer-dist --no-progress
+
+      - name: 4. Запуск автоматизованих тестів (PHPUnit) 🧪
+        run: composer run test

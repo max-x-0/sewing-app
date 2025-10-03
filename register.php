@@ -3,18 +3,31 @@ require 'db.php';
 require 'functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = strip_tags(trim($_POST['username']));
-    $password = $_POST['password'];
-    $role = "user";
 
-    $hash = password_hash($password, PASSWORD_DEFAULT);
+    if ($conn !== null) {
+        $username = strip_tags(trim($_POST['username']));
+        $password = $_POST['password'];
+        $role = "user";
 
-    $stmt = $conn->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $hash, $role);
-    $ok = $stmt->execute();
-    $stmt->close();
+        $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $_SESSION[$ok ? 'success' : 'error'] = $ok ? "Користувач зареєстрований, увійдіть" : "Помилка реєстрації";
+        $stmt = $conn->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)");
+
+        if (!$stmt) {
+            $_SESSION['error'] = "Помилка БД при підготовці запиту";
+            header("Location: login.php");
+            exit;
+        }
+
+        $stmt->bind_param("sss", $username, $hash, $role);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        $_SESSION[$ok ? 'success' : 'error'] = $ok ? "Користувач зареєстрований, увійдіть" : "Помилка реєстрації";
+    } else {
+        $_SESSION['error'] = "Неможливо зареєструватись: функціонал БД недоступний.";
+    }
+
     header("Location: login.php");
     exit;
 }

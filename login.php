@@ -21,34 +21,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT id, password_hash, role FROM users WHERE username = ?");
-    if (!$stmt) {
-        $_SESSION['error'] = "Помилка БД";
-        header("Location: login.php");
-        exit;
-    }
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->bind_result($id, $hash, $role);
-    $found = $stmt->fetch();
-    $stmt->close();
+    if ($conn !== null) {
+        $stmt = $conn->prepare("SELECT id, password_hash, role FROM users WHERE username = ?");
 
-    if ($found && password_verify($password, $hash)) {
-        session_regenerate_id(true);
-
-        $_SESSION['user_id'] = $id;
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = $role;
-
-        if ($role === 'admin') {
-            header("Location: admin.php");
+        if (!$stmt) {
+            $_SESSION['error'] = "Помилка БД при підготовці запиту";
+            header("Location: login.php");
             exit;
+        }
+
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $stmt->bind_result($id, $hash, $role);
+        $found = $stmt->fetch();
+        $stmt->close();
+
+        if ($found && password_verify($password, $hash)) {
+            session_regenerate_id(true);
+
+            $_SESSION['user_id'] = $id;
+            $_SESSION['username'] = $username;
+            $_SESSION['role'] = $role;
+
+            if ($role === 'admin') {
+                header("Location: admin.php");
+                exit;
+            } else {
+                header("Location: index.php");
+                exit;
+            }
         } else {
-            header("Location: index.php");
+            $_SESSION['error'] = "Невірний логін або пароль";
+            header("Location: login.php");
             exit;
         }
     } else {
-        $_SESSION['error'] = "Невірний логін або пароль";
+        $_SESSION['error'] = "Виникла помилка підключення до бази даних. Спробуйте пізніше.";
         header("Location: login.php");
         exit;
     }
